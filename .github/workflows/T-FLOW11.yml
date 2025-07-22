@@ -5,6 +5,7 @@ name: Java CICD
   push:
     branches:
       - main
+      - dev
 jobs:
   ci-pipeline:
     runs-on: ubuntu-latest
