@@ -4,7 +4,7 @@ name: Java CICDasdfsadf
     }
   push:
     branches:
-     - v2
+     - v3
 jobs:
   ci-pipeline:
     runs-on: ubuntu-latest
