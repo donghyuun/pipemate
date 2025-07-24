@@ -1,4 +1,4 @@
-name: Java CICD
+name: Java CICDasdfsadf
 'on':
   workflow_dispatch: {
     }
