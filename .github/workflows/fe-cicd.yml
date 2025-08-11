@@ -1,0 +1,215 @@
+name: CI-CD
+'on':
+  push:
+    branches:
+     - main
+     - sehigh
+  pull_request:
+    branches:
+     - main
+     - sehigh
+x_name: 워크플로우 기본 설정
+x_description: GitHub Actions 워크플로우 이름과 트리거 조건을 설정하는 블록입니다.
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    x_name: Job 설정 (Lint)
+    x_description: ESLint와 TypeScript 타입 체크를 수행하는 잡입니다.
+    steps:
+     -
+      name: Checkout
+      uses: actions/checkout@v4
+      x_name: Checkout repository
+      x_description: GitHub 저장소를 체크아웃합니다.
+      x_domain: github
+      x_task:
+       - checkout
+     -
+      name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: npm
+      x_name: Setup Node.js 20
+      x_description: Node.js 20과 npm 캐시를 설정합니다.
+      x_domain: node
+      x_task:
+       - setup
+     -
+      name: Install deps
+      run: npm ci
+      x_name: Install dependencies
+      x_description: 의존성을 설치합니다.
+      x_domain: npm
+      x_task:
+       - install
+     -
+      name: Run ESLint
+      run: npm run lint
+      x_name: Run ESLint
+      x_description: ESLint를 실행하여 코드 스타일을 검사합니다.
+      x_domain: quality
+      x_task:
+       - lint
+     -
+      name: TS type check
+      run: npx tsc --noEmit
+      x_name: TypeScript 타입 체크
+      x_description: TypeScript 타입 오류를 확인합니다.
+      x_domain: quality
+      x_task:
+       - typecheck
+  test:
+    runs-on: ubuntu-latest
+    x_name: Job 설정 (Test)
+    x_description: 단위 테스트를 실행하는 잡입니다.
+    steps:
+     -
+      name: Checkout
+      uses: actions/checkout@v4
+      x_name: Checkout repository
+      x_description: GitHub 저장소를 체크아웃합니다.
+      x_domain: github
+      x_task:
+       - checkout
+     -
+      name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: npm
+      x_name: Setup Node.js 20
+      x_description: Node.js 20과 npm 캐시를 설정합니다.
+      x_domain: node
+      x_task:
+       - setup
+     -
+      name: Install deps
+      run: npm ci
+      x_name: Install dependencies
+      x_description: 의존성을 설치합니다.
+      x_domain: npm
+      x_task:
+       - install
+     -
+      name: Run tests
+      run: npm run test:run
+      x_name: Run tests
+      x_description: 단위 테스트를 실행합니다.
+      x_domain: test
+      x_task:
+       - unit
+  build:
+    runs-on: ubuntu-latest
+    x_name: Job 설정 (Build)
+    x_description: 빌드 검증을 수행하는 잡입니다.
+    steps:
+     -
+      name: Checkout
+      uses: actions/checkout@v4
+      x_name: Checkout repository
+      x_description: GitHub 저장소를 체크아웃합니다.
+      x_domain: github
+      x_task:
+       - checkout
+     -
+      name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: npm
+      x_name: Setup Node.js 20
+      x_description: Node.js 20과 npm 캐시를 설정합니다.
+      x_domain: node
+      x_task:
+       - setup
+     -
+      name: Install deps
+      run: npm ci
+      x_name: Install dependencies
+      x_description: 의존성을 설치합니다.
+      x_domain: npm
+      x_task:
+       - install
+     -
+      name: Build app
+      run: npm run build
+      x_name: Build application
+      x_description: 애플리케이션을 빌드합니다.
+      x_domain: build
+      x_task:
+       - build
+  deploy-preview:
+    runs-on: ubuntu-latest
+    x_name: Job 설정 (Deploy Preview)
+    x_description: PR 또는 main 외 브랜치에 Preview 배포를 수행하는 잡입니다.
+    steps:
+     -
+      name: Install Vercel CLI
+      run: npm i -g vercel
+      x_name: Install Vercel CLI
+      x_description: Vercel CLI를 설치합니다.
+      x_domain: vercel
+      x_task:
+       - cli-install
+     -
+      name: Vercel pull
+      run: vercel pull --yes --environment=preview --token "$VERCEL_TOKEN"
+      x_name: Vercel pull (preview)
+      x_description: Vercel preview 환경 구성을 가져옵니다.
+      x_domain: vercel
+      x_task:
+       - pull
+     -
+      name: Vercel build
+      run: vercel build --token "$VERCEL_TOKEN"
+      x_name: Vercel build
+      x_description: Vercel 빌드를 수행합니다.
+      x_domain: vercel
+      x_task:
+       - build
+     -
+      name: Deploy preview
+      run: vercel deploy --prebuilt --token "$VERCEL_TOKEN"
+      x_name: Deploy preview
+      x_description: Preview 환경에 배포합니다.
+      x_domain: vercel
+      x_task:
+       - deploy-preview
+  deploy-production:
+    runs-on: ubuntu-latest
+    x_name: Job 설정 (Deploy Production)
+    x_description: main 브랜치에 Production 배포를 수행하는 잡입니다.
+    steps:
+     -
+      name: Install Vercel CLI
+      run: npm i -g vercel
+      x_name: Install Vercel CLI
+      x_description: Vercel CLI를 설치합니다.
+      x_domain: vercel
+      x_task:
+       - cli-install
+     -
+      name: Vercel pull
+      run: vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
+      x_name: Vercel pull (production)
+      x_description: Vercel production 환경 구성을 가져옵니다.
+      x_domain: vercel
+      x_task:
+       - pull
+     -
+      name: Vercel build
+      run: vercel build --token "$VERCEL_TOKEN"
+      x_name: Vercel build
+      x_description: Vercel 빌드를 수행합니다.
+      x_domain: vercel
+      x_task:
+       - build
+     -
+      name: Deploy production
+      run: vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN"
+      x_name: Deploy production
+      x_description: Production 환경에 배포합니다.
+      x_domain: vercel
+      x_task:
+       - deploy-production
